@@ -1,0 +1,202 @@
+<properties>
+    <property name="queryGoodsInfo">
+        <![CDATA[{
+            #if($includes || $excludes)
+                "_source": {
+                    #if($includes )
+                        "includes": #[includes,serialJson=true]
+                    #if($excludes ),#end
+                    #end
+                    #if($excludes )
+                        "excludes": #[excludes,serialJson=true]
+                    #end
+                },
+            #end
+            #if($searchAfterId)
+                "search_after":[#[searchAfterId]],
+            #end
+            #if($trackTotalHits)
+                "track_total_hits": #[trackTotalHits],
+            #end
+            "query": {
+               "bool": {
+                 "filter": [
+                   #set( $needComma = false )
+                   #if($tcode)
+                        {
+                          "term": {
+                            "tcode": {
+                              "value": #[tcode]
+                            }
+                          }
+                        }
+                        #set( $needComma = true )
+                   #end
+                   #if($sourceProductId)
+                        #if($needComma),#end
+                        {
+                          "term": {
+                            "sourceProductId": {
+                              "value": #[sourceProductId]
+                            }
+                          }
+                        }
+                        #set( $needComma = true )
+                   #end
+                   #if($isDeleted)
+                        #if($needComma),#end
+                        {
+                          "term": {
+                            "isDeleted": {
+                              "value": #[isDeleted]
+                            }
+                          }
+                        }
+                        #set( $needComma = true )
+                   #end
+                   #if($sourceProductInstanceId)
+                        #if($needComma),#end
+                        {
+                          "term": {
+                            "sourceProductInstanceId": {
+                                "value": #[sourceProductInstanceId]
+                            }
+                          }
+                        }
+                        #set( $needComma = true )
+                   #end
+                   #if($merchantId)
+                        #if($needComma),#end
+                        {
+                          "term": {
+                            "merchantId": {
+                                "value": #[merchantId]
+                            }
+                          }
+                        }
+                        #set( $needComma = true )
+                   #end
+                   #if($bosId)
+                        #if($needComma),#end
+                        {
+                          "term": {
+                            "bosId": {
+                              "value": #[bosId]
+                            }
+                          }
+                        }
+                        #set( $needComma = true )
+                   #end
+                   #if($vid)
+                        #if($needComma),#end
+                        {
+                          "term": {
+                            "vid": {
+                              "value": #[vid]
+                            }
+                          }
+                        }
+                        #set( $needComma = true )
+                   #end
+                   #if($isCanSell)
+                        #if($needComma),#end
+                        {
+                          "term": {
+                            "isCanSell": {
+                              "value": #[isCanSell]
+                            }
+                          }
+                        }
+                        #set( $needComma = true )
+                   #end
+                   #if($isOnline)
+                        #if($needComma),#end
+                        {
+                          "term": {
+                            "isOnline": {
+                              "value": #[isOnline]
+                            }
+                          }
+                        }
+                        #set( $needComma = true )
+                   #end
+                   #if($channelIds)
+                        #if($needComma),#end
+                        {
+                            "nested":{
+                                "query":{
+                                    "bool":{
+                                        "filter":[
+                                            {
+                                                "terms":{
+                                                    "channelList.channelId":[
+                                                        #foreach($channelId in $channelIds)
+                                                           #if($velocityCount > 0),#end #[channelIds[$velocityCount]]
+                                                        #end
+                                                    ],
+                                                    "boost":1
+                                                }
+                                            }
+                                        ],
+                                        "adjust_pure_negative":true,
+                                        "boost":1
+                                    }
+                                },
+                                "path":"channelList",
+                                "ignore_unmapped":false,
+                                "score_mode":"avg",
+                                "boost":1
+                            }
+                        }
+                        #set( $needComma = true )
+                   #end
+                   #if($isAssigned)
+                        #if($needComma),#end
+                        {
+                          "term": {
+                            "isAssigned": {
+                              "value": #[isAssigned]
+                            }
+                          }
+                        }
+                        #set( $needComma = true )
+                   #end
+                  ],
+                  "must_not": [
+                    #set( $mustNotNeedComma = false )
+                    #if($tagCodeList)
+                        #if($mustNotNeedComma),#end
+                        {
+                            "terms":{
+                                "tagCodeList":[
+                                    #foreach($tagCode in $tagCodeList)
+                                       #if($velocityCount > 0),#end #[tagCodeList[$velocityCount]]
+                                    #end
+                                ],
+                                "boost":1
+                            }
+                        }
+                        #set( $mustNotNeedComma = true )
+                   #end
+                  ]
+                }
+              },
+            "from": #[from],
+            "size": #[size]
+
+            #if($sortColumn)
+             ,
+            "sort":[
+                #foreach( $key in $sortColumn.keySet() )
+                #if($velocityCount > 0),#end
+                {
+                    "$key": {
+                        "order" :"$sortColumn.get($key)"
+                    }
+                }
+                #end
+            ]
+            #end
+        }]]>
+    </property>
+</properties>
