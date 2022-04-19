@@ -4,5 +4,6 @@ es客户端，直连dsl太难维度，spring-data-es提供的客户端不好用�
 
 1.下载代码，配置es的地址：配置类：SearchConfig.java
 2.新建的每个es索引，实现EsQueryIndex接口，这个接口的主要作用就是根据不同的索引和实体类，将es数据转为具体对象
+3.文档使用使用示例:见api使用示例
 
 
