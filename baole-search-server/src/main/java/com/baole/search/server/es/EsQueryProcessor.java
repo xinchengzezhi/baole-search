@@ -129,13 +129,11 @@ public class EsQueryProcessor<C, T> {
     }
 
 
-
     private SearchHits<C> getSearchHits(EsContextDTO<C, T> esContextDTO) {
 
         EsRequestDTO esRequestDTO = esContextDTO.getEsRequestDTO();
         EsQueryIndex<C, T> esQueryIndex = esContextDTO.getEsQueryIndex();
         NativeSearchQuery nativeSearchQuery = esContextDTO.getNativeSearchQuery();
-
         ElasticsearchCommand elasticsearchCommand = esQueryIndex.getElasticsearchCommand();
         VerifyDataUtil.checkNotNull("esRequestDTO indexCode elasticsearchCommand", ErrorCode.PARAM_ERROR, elasticsearchCommand);
 
@@ -172,7 +170,7 @@ public class EsQueryProcessor<C, T> {
         //7.9.3版本
 //        List<Aggregation> aggregationList = searchHits.getAggregations().asList();
         searchHits.getAggregations().aggregations();
-        List<Aggregation> aggregationList=aggregations.asList();
+        List<Aggregation> aggregationList = aggregations.asList();
         if (CollectionUtils.isEmpty(aggregationList)) {
             return;
         }
@@ -264,7 +262,7 @@ public class EsQueryProcessor<C, T> {
 
         List<SortBuilder<?>> sortBuilderList = getSortBuilder(esContextDTO);
         if (!CollectionUtils.isEmpty(sortBuilderList)) {
-
+//            nativeSearchQueryBuilder.withSorts(sortBuilderList);
             for (SortBuilder<?> sortBuilder : sortBuilderList) {
 
                 if (sortBuilder != null) {
@@ -352,7 +350,7 @@ public class EsQueryProcessor<C, T> {
         if (Objects.equals(esAggregationRequestDTO.getAggregationType(), EsAggregationEnum.DISTINCT_COUNT.getAggregationType())) {
 
             CardinalityAggregationBuilder cardinalityAggregationBuilder = AggregationBuilders.cardinality(esAggregationRequestDTO.getName());
-            String fieldName = getFieldName(esContextDTO,esAggregationRequestDTO.getFieldName());
+            String fieldName = getFieldName(esContextDTO, esAggregationRequestDTO.getFieldName());
             VerifyDataUtil.checkNotNull("esAggregationRequestDTO fieldName", ErrorCode.PARAM_ERROR, fieldName);
 
             cardinalityAggregationBuilder.field(fieldName);
@@ -404,7 +402,7 @@ public class EsQueryProcessor<C, T> {
 
         if (Objects.equals(EsQueryEnum.EXIST.getQueryType(), esEntityRequestDTO.getQueryType())) {
 
-            String fieldName = getFieldName(esContextDTO,  esEntityRequestDTO.getFieldName());
+            String fieldName = getFieldName(esContextDTO, esEntityRequestDTO.getFieldName());
             VerifyDataUtil.checkNotNull("exist esEntityRequestDTO fieldName", ErrorCode.PARAM_ERROR, fieldName);
 
             return QueryBuilders.existsQuery(fieldName);
@@ -424,7 +422,7 @@ public class EsQueryProcessor<C, T> {
 
         if (Objects.equals(EsQueryEnum.MATCH_PHRASE.getQueryType(), esEntityRequestDTO.getQueryType())) {
 
-            String fieldName = getFieldName(esContextDTO,  esEntityRequestDTO.getFieldName());
+            String fieldName = getFieldName(esContextDTO, esEntityRequestDTO.getFieldName());
             VerifyDataUtil.checkNotNull("match_phrase esEntityRequestDTO fieldName", ErrorCode.PARAM_ERROR, fieldName);
             VerifyDataUtil.checkListNotEmpty("match_phrase esEntityRequestDTO values", ErrorCode.PARAM_ERROR, esEntityRequestDTO.getValues());
 
@@ -571,24 +569,48 @@ public class EsQueryProcessor<C, T> {
             }
 
             FieldSortBuilder fieldSortBuilder = sortBuilder.order(sortOrder);
-            if (!StringUtils.isBlank(esSortRequestDTO.getNestedSortPath())
-                    && esSortRequestDTO.getEsNestedSortFilterRequestDTO() != null) {
-                String filterFieldName = getFieldName(esContextDTO,
-                        esSortRequestDTO.getEsNestedSortFilterRequestDTO().getFieldName());
-                VerifyDataUtil.checkNotNull("esSortRequestDTO filterFieldName", ErrorCode.PARAM_ERROR, filterFieldName);
-                VerifyDataUtil.checkNotNull("esSortRequestDTO filterValue", ErrorCode.PARAM_ERROR,
-                        esSortRequestDTO.getEsNestedSortFilterRequestDTO().getValue());
+            if (!StringUtils.isBlank(esSortRequestDTO.getNestedSortPath())) {
+                if (esSortRequestDTO.getEsNestedSortFilterRequestDTO() != null) {
+                    String filterFieldName = getFieldName(esContextDTO,
+                            esSortRequestDTO.getEsNestedSortFilterRequestDTO().getFieldName());
+                    VerifyDataUtil.checkNotNull("esSortRequestDTO filterFieldName", ErrorCode.PARAM_ERROR, filterFieldName);
+                    VerifyDataUtil.checkNotNull("esSortRequestDTO filterValue", ErrorCode.PARAM_ERROR,
+                            esSortRequestDTO.getEsNestedSortFilterRequestDTO().getValue());
 
-                NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(esSortRequestDTO.getNestedSortPath());
-                TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(filterFieldName,
-                        esSortRequestDTO.getEsNestedSortFilterRequestDTO().getValue());
-                nestedSortBuilder.setFilter(termQueryBuilder);
-                fieldSortBuilder = fieldSortBuilder.setNestedSort(nestedSortBuilder);
+                    NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(esSortRequestDTO.getNestedSortPath());
+                    TermQueryBuilder termQueryBuilder = QueryBuilders.termQuery(filterFieldName,
+                            esSortRequestDTO.getEsNestedSortFilterRequestDTO().getValue());
+                    nestedSortBuilder.setFilter(termQueryBuilder);
+                    fieldSortBuilder = fieldSortBuilder.setNestedSort(nestedSortBuilder);
+                } else if (!CollectionUtils.isEmpty(esSortRequestDTO.getSelectForAndList())) {
+                    NestedSortBuilder nestedSortBuilder = new NestedSortBuilder(esSortRequestDTO.getNestedSortPath());
+                    BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+                    analyseSelecSorttList(boolQueryBuilder, esSortRequestDTO, esContextDTO);
+                    nestedSortBuilder.setFilter(boolQueryBuilder);
+                    fieldSortBuilder = fieldSortBuilder.setNestedSort(nestedSortBuilder);
+                }
             }
+
             list.add(fieldSortBuilder);
         }
 
         return list;
+    }
+
+    private void analyseSelecSorttList(BoolQueryBuilder boolQueryBuilder, EsSortRequestDTO esSortRequestDTO, EsContextDTO<C, T> esContextDTO) {
+
+
+        if (CollectionUtils.isEmpty(esSortRequestDTO.getSelectForAndList())) {
+            return;
+        }
+
+        for (EsEntityRequestDTO esEntityRequestDTO : esSortRequestDTO.getSelectForAndList()) {
+
+            QueryBuilder queryBuilder = getQueryBuilderByQueryType(esEntityRequestDTO, esContextDTO);
+            VerifyDataUtil.checkNotNull("esRequestDTO selectForAndList queryType", ErrorCode.PARAM_ERROR, queryBuilder);
+
+            boolQueryBuilder.filter(queryBuilder);
+        }
     }
 
 

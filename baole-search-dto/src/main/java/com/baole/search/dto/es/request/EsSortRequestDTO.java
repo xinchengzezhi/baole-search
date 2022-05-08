@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 排序查询
@@ -33,6 +34,11 @@ public class EsSortRequestDTO implements Serializable {
      * 嵌套排序，排序过滤器
      */
     private EsNestedSortFilterRequestDTO esNestedSortFilterRequestDTO;
+
+    /**
+     * 排序复杂过滤,如果传了这个esNestedSortFilterRequestDTO，selectForAndList就不会生效
+     */
+    private List<EsEntityRequestDTO> selectForAndList;
 
     /**
      * 排序类型

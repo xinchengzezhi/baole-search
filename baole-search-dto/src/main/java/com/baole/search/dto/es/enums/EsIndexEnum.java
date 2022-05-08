@@ -15,14 +15,14 @@ public enum EsIndexEnum {
     /**
      * 商品基础索引
      */
-    MP_GOODS_INFO_INDEX("1", "EsQueryForGoodsIndex"),
+    MP_GOODS_INFO_INDEX("saas-mp-goods-info", "EsQueryForGoodsIndex"),
 
     /**
      * 后台商品
      */
-    ITEM_INDEX("20", "EsQueryForItemIndex"),
+    ITEM_INDEX("saas-mp-goods-item", "EsQueryForItemIndex"),
 
-    ITEM_SKU_INDEX("21", "EsQueryForItemSkuIndex"),
+    ITEM_SKU_INDEX("saas-mp-goods-item-sku", "EsQueryForItemSkuIndex"),
 
 
 

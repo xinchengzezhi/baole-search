@@ -26,8 +26,8 @@ public class TestControllerV2 {
 
     @Resource
     private EsQueryProcessor<EsGoodsInfoBO, EsGoodsResponseDTO> esQueryProcessor;
-    @Autowired
-    private ElasticsearchRestService elasticsearchRestService;
+//    @Autowired
+//    private ElasticsearchRestService elasticsearchRestService;
 
 
     @RequestMapping("/test")
@@ -76,9 +76,9 @@ public class TestControllerV2 {
                 + "      }\n"
                 + "   ]\n"
                 + "}");
-        JSONObject search = elasticsearchRestService.search(req);
-        PageResult<EsGoodsResponseDTO> result = elasticsearchRestService.parseDocumentSearchAfter(search, EsGoodsResponseDTO.class);
-        return JSON.toJSONString(result);
+//        JSONObject search = elasticsearchRestService.search(req);
+//        PageResult<EsGoodsResponseDTO> result = elasticsearchRestService.parseDocumentSearchAfter(search, EsGoodsResponseDTO.class);
+        return JSON.toJSONString(null);
     }
 
 }

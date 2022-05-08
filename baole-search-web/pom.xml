@@ -17,6 +17,12 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>baole-search-server</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>redisson-spring-data-24</artifactId>
+                    <groupId>org.redisson</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
